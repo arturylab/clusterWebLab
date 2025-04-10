@@ -165,6 +165,14 @@ document.getElementById('optimize-button').addEventListener('click', () => {
     if (!xyzContent) return;
 
     const selectedMethod = document.querySelector('input[name="optimization-method"]:checked').value;
+
+    // Display "Optimization in progress..." message
+    const optimizerSection = document.querySelector('.optimizer');
+    let progressMessage = document.createElement('p');
+    progressMessage.textContent = "Optimization in progress . . .";
+    progressMessage.style.color = 'blue';
+    optimizerSection.insertBefore(progressMessage, document.getElementById('optimize-button'));
+
     fetch('/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -172,18 +180,24 @@ document.getElementById('optimize-button').addEventListener('click', () => {
     })
         .then(response => response.json())
         .then(data => {
+            // Remove the progress message
+            progressMessage.remove();
+
             if (data.error) {
                 console.error("Error optimizing structure:", data.error);
             } else {
                 const messageContainer = document.createElement('p');
                 messageContainer.textContent = data.message;
                 messageContainer.style.color = 'green';
-                const optimizerSection = document.querySelector('.optimizer');
                 optimizerSection.insertBefore(messageContainer, document.getElementById('optimize-button'));
                 console.log(data.message);
             }
         })
-        .catch(error => console.error("Error:", error));
+        .catch(error => {
+            // Remove the progress message in case of error
+            progressMessage.remove();
+            console.error("Error:", error);
+        });
 });
 
 // Add event listener to the "Load Optimized Structure" button
