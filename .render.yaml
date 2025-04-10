@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: cluster-web-lab
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:5000 app:app
