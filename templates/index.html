@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Web Lab 🧪</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+</head>
+<body>
+    <main class="container">
+        <section class="left-section" id="left-section" aria-live="polite">
+            <p>Loading 3D viewer...</p>
+        </section>
+        <section class="right-section">
+            <h1>Cluster Viewer ⚛️</h1>
+            <div class="select-file">
+                <h3>Upload XYZ File 📁</h3>
+                <label for="file-upload" aria-label="Upload an XYZ file">Select File:</label>
+                <input type="file" id="file-upload" name="file-upload" aria-describedby="file-upload-desc">
+                <p id="file-upload-desc" style="display: none;">Upload an XYZ file to visualize it.</p>
+                <button id="load-file-button">Load</button>
+            </div>
+            <div class="random-cluster-generator">
+                <h3>Random Cluster Generator 🧬</h3>
+                <label for="cluster-input">Cluster Configuration:</label>
+                <input type="text" id="cluster-input" name="cluster-input" placeholder="e.g., Pd12Pt1">
+                <button id="generate-button">Generate</button>
+            </div>
+            <div class="optimizer">
+                <h3>Optimizer ⚙️</h3>
+                <label id="interaction-info" style="color: gray; font-size: smaller;">
+                Supports interactions between the following atomic pairs:<br>
+                Fe-Co-Ni | Cu-Pd-Ag-Pt-Au
+                </label>
+                <div>
+                    <input type="radio" id="L-BFGS-B" name="optimization-method" value="L-BFGS-B" checked>
+                    <label for="L-BFGS-B">L-BFGS-B (Local)</label>
+                    <input type="radio" id="basinhopping" name="optimization-method" value="basinhopping">
+                    <label for="basinhopping">Basin-Hopping (Global)</label>
+                </div>
+                <br>
+                <button id="optimize-button">Optimize</button>
+                <button id="load-opt-button">Load</button>
+            </div>
+            <div class="color-schema">
+                <h3>Color Schema 🎨</h3>
+                <div>
+                    <input type="radio" id="Jmol" name="color-schema" value="Jmol" checked>
+                    <label for="Jmol">Jmol</label>
+                    <input type="radio" id="default" name="color-schema" value="default">
+                    <label for="default">Rasmol</label>
+                </div>
+            </div>
+            <div class="download-file">
+                <h3>Download File 💾</h3>
+                <div>
+                    <label for="download-xyz">File XYZ:</label>
+                    <button id="download-xyz">Download</button>
+                    <label for="download-png">Image PNG:</label>
+                    <button id="download-png">Download</button>
+                </div>
+            </div>
+            <footer style="text-align: center; margin-top: 20px; font-size: smaller; color: gray;">
+                <p>Developed by arturyLab 🧪</p>
+            </footer>
+        </section>
+    </main>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
+</body>
+</html>
