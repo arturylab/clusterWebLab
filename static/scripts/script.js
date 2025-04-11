@@ -28,6 +28,9 @@ function loadModelIntoViewer(data, colorscheme = "Jmol") {
     });
 }
 
+// Load the default XYZ file on page load
+fetchAndLoadFile("/static/examples/pd12pt1.xyz");
+
 // Utility function to fetch and load a file into the viewer
 function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
     jQuery.ajax({
@@ -35,15 +38,17 @@ function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
         dataType: "text",
         success: function (data) {
             loadModelIntoViewer(data, colorscheme);
+            console.log(`File successfully loaded from ${filePath}`);
         },
-        error: function (xhr, status, error) {
+        error: function (error) {
             console.error(`Error loading file from ${filePath}:`, error);
         }
     });
-}
 
-// Load the default XYZ file on page load
-fetchAndLoadFile("/static/examples/pd12pt1.xyz");
+    // Reload the file if fetched again
+    viewer.removeAllModels();
+    viewer.render();
+}
 
 // Add event listener to the "Change Color Scheme" radio buttons
 document.querySelectorAll('input[name="color-schema"]').forEach(input => {
@@ -224,27 +229,5 @@ document.getElementById('load-opt-button').addEventListener('click', async () =>
         console.log(`Optimized file loaded from ${optimizedFilePath}`);
     } catch (error) {
         console.error('Error loading optimized structure:', error);
-    }
-});
-
-// Add event listener to the "Load Default File" button
-document.getElementById('load-file-button').addEventListener('click', async () => {
-    try {
-        // Fetch the user's UUID from the server
-        const response = await fetch('/get_user_uuid');
-        if (!response.ok) {
-            throw new Error('Failed to fetch user UUID');
-        }
-        const data = await response.json();
-        const userId = data.user_id;
-
-        // Construct the path to the default file
-        const defaultFilePath = `/static/tmp/${userId}/input.xyz`;
-
-        // Load the default file into the viewer
-        fetchAndLoadFile(defaultFilePath);
-        console.log(`Default file loaded from ${defaultFilePath}`);
-    } catch (error) {
-        console.error('Error loading default file:', error);
     }
 });
