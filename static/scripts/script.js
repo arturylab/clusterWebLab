@@ -201,17 +201,50 @@ document.getElementById('optimize-button').addEventListener('click', () => {
 });
 
 // Add event listener to the "Load Optimized Structure" button
-document.getElementById('load-opt-button').addEventListener('click', () => {
+document.getElementById('load-opt-button').addEventListener('click', async () => {
     const messageContainer = document.querySelector('.optimizer p');
     if (messageContainer) {
         messageContainer.remove();
     }
-    fetchAndLoadFile("/static/tmp/opt-input.xyz");
+
+    try {
+        // Fetch the user's UUID from the server
+        const response = await fetch('/get_user_uuid');
+        if (!response.ok) {
+            throw new Error('Failed to fetch user UUID');
+        }
+        const data = await response.json();
+        const userId = data.user_id;
+
+        // Construct the path to the optimized file
+        const optimizedFilePath = `/static/tmp/${userId}/opt-input.xyz`;
+
+        // Load the optimized file into the viewer
+        fetchAndLoadFile(optimizedFilePath);
+        console.log(`Optimized file loaded from ${optimizedFilePath}`);
+    } catch (error) {
+        console.error('Error loading optimized structure:', error);
+    }
 });
 
 // Add event listener to the "Load Default File" button
-document.getElementById('load-file-button').addEventListener('click', () => {
-    const defaultFilePath = "/static/tmp/input.xyz"; // Path to the default file
-    fetchAndLoadFile(defaultFilePath);
-    console.log(`Default file loaded from ${defaultFilePath}`);
+document.getElementById('load-file-button').addEventListener('click', async () => {
+    try {
+        // Fetch the user's UUID from the server
+        const response = await fetch('/get_user_uuid');
+        if (!response.ok) {
+            throw new Error('Failed to fetch user UUID');
+        }
+        const data = await response.json();
+        const userId = data.user_id;
+
+        // Construct the path to the default file
+        const defaultFilePath = `/static/tmp/${userId}/input.xyz`;
+
+        // Load the default file into the viewer
+        fetchAndLoadFile(defaultFilePath);
+        console.log(`Default file loaded from ${defaultFilePath}`);
+    } catch (error) {
+        console.error('Error loading default file:', error);
+    }
 });
