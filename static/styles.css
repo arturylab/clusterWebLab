@@ -17,7 +17,12 @@ body, html {
 
 h3 {
     text-align: center;
-    text-decoration: underline;
+}
+
+hr {
+    border: 0.5px solid;
+    width: 85%;
+    color: #d6d6d6; 
 }
 
 .container {
