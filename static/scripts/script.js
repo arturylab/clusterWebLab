@@ -146,6 +146,8 @@ document.getElementById('generate-button').addEventListener('click', () => {
     const clusterInput = document.getElementById('cluster-input').value.trim(); // Get cluster configuration
     if (!clusterInput) {
         console.error("Cluster configuration is required.");
+        const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
+        overlayText.textContent = "❓ Cluster configuration is required."; // Display progress message
         return;
     }
     fetch('/generate_cluster', {
@@ -187,6 +189,7 @@ document.getElementById('optimize-button').addEventListener('click', () => {
                 if (data.error) {
                     overlayText.textContent = "Error optimizing structure."; // Display error message
                     console.error("Error optimizing structure:", data.error);
+                    overlayText.textContent = `🚫 Atomic pair interaction not supported: ${data.error}`; // Display error message
                 } else {
                     overlayText.textContent = data.message; // Display success message
                     console.log(data.message);
