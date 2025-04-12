@@ -4,6 +4,10 @@ Cluster Web Lab is a web application designed for visualizing, generating, and o
 
 ---
 
+## Live Demo 🌐
+
+You can try the web app live at the following page: [https://clusterweblab.appx.ro/](https://clusterweblab.appx.ro/)
+
 ## Features 🌟
 
 - **3D Visualization** 🧬: Load and visualize XYZ files in an interactive 3D viewer.
