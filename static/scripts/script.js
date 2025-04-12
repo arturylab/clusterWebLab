@@ -172,17 +172,8 @@ document.getElementById('optimize-button').addEventListener('click', () => {
 
     const selectedMethod = document.querySelector('input[name="optimization-method"]:checked').value; // Get selected optimization method
 
-    const messageContainer = document.querySelector('.optimizer p');
-    if (messageContainer) {
-        messageContainer.remove(); // Remove any existing message
-    }
-
-    // Display "Optimization in progress..." message
-    const optimizerSection = document.querySelector('.optimizer');
-    let progressMessage = document.createElement('p');
-    progressMessage.textContent = "Optimization in progress . . .";
-    progressMessage.style.color = 'blue';
-    optimizerSection.insertBefore(progressMessage, document.getElementById('optimize-button'));
+    const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
+    overlayText.textContent = "⚙️ Optimization in progress..."; // Display progress message
 
     fetch('/optimize', {
         method: 'POST',
@@ -193,15 +184,11 @@ document.getElementById('optimize-button').addEventListener('click', () => {
         .then(async (data) => {
             // Ensure the message is displayed for at least 1 second
             setTimeout(async () => {
-                progressMessage.remove();
-
                 if (data.error) {
+                    overlayText.textContent = "Error optimizing structure."; // Display error message
                     console.error("Error optimizing structure:", data.error);
                 } else {
-                    const messageContainer = document.createElement('p');
-                    messageContainer.textContent = data.message;
-                    messageContainer.style.color = 'green';
-                    optimizerSection.insertBefore(messageContainer, document.getElementById('optimize-button'));
+                    overlayText.textContent = data.message; // Display success message
                     console.log(data.message);
 
                     // Automatically load the optimized structure
@@ -228,7 +215,7 @@ document.getElementById('optimize-button').addEventListener('click', () => {
         .catch(error => {
             // Ensure the message is displayed for at least 1 second in case of error
             setTimeout(() => {
-                progressMessage.remove();
+                overlayText.textContent = "Error optimizing structure."; // Display error message
                 console.error("Error:", error);
             }, 1000);
         });
@@ -237,7 +224,7 @@ document.getElementById('optimize-button').addEventListener('click', () => {
 // Add event listener to the "Energy" button
 document.getElementById('get_energy').addEventListener('click', async () => {
     const overlayText = document.querySelector('.overlay-text');
-    overlayText.textContent = "Energy calculation in progress . . .";
+    overlayText.textContent = "⚡️ Energy calculation in progress...";
 
     try {
         // Fetch the user's UUID to locate the optimized file
@@ -269,7 +256,7 @@ document.getElementById('get_energy').addEventListener('click', async () => {
 
         // Ensure the message is displayed for at least 1 second
         setTimeout(() => {
-            overlayText.textContent = `Energy: ${energyData.energy}`; // Display the calculated energy
+            overlayText.textContent = `⚡️ Energy: ${energyData.energy}`; // Display the calculated energy
         }, 1000);
     } catch (error) {
         console.error('Error calculating energy:', error);
