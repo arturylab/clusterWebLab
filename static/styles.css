@@ -98,7 +98,7 @@ input, select {
     left: 50%;
     transform: translateX(-50%); /* Center horizontally */
     background-color: rgba(0, 0, 0, 0.35); /* Semi-transparent background */
-    color: white;
+    color: #fafafa; /* Text color */
     padding: 5px 10px;
     border-radius: 5px; /* Rounded corners */
     font-size: 12px;

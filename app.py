@@ -142,7 +142,7 @@ def optimize():
         with open(optimized_file_destination, 'r') as optimized_file:
             optimized_xyz_content = optimized_file.read()
 
-        success_message = f"Optimization successful. Executed in {execution_time:.4f} seconds."
+        success_message = f"⚙️ Optimization successful. ⏱️ Executed in {execution_time:.4f} seconds."
         return jsonify({'optimized_xyz_content': optimized_xyz_content, 'message': success_message})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
