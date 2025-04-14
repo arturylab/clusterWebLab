@@ -6,9 +6,9 @@ import shutil
 sys.path.append(os.path.join(os.path.dirname(__file__), 'static/src'))
 from static.src.rnd_xyz import parse_atom_sequence, generate_random_coordinates
 from static.src.optimizer import optimize_structure
-from flask import Flask, render_template, request, jsonify, session
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -133,7 +133,14 @@ def optimize():
         if not os.path.exists(temp_file_path):
             return jsonify({'error': f"File not found: {temp_file_path}"}), 400
 
-        _, execution_time = optimize_structure(temp_file_path, method=method)
+        # Guardar el contenido XYZ actual para asegurar que estamos optimizando
+        # el modelo correcto en cada reoptimización
+        with open(temp_file_path, 'w') as f:
+            f.write(xyz_content)
+
+        # Ahora realiza la optimización con el archivo actualizado
+        (energy_values, execution_time) = optimize_structure(temp_file_path, method=method)
+        old_energy, new_energy = energy_values
 
         optimized_file_source = os.path.join('opt-input.xyz')
         optimized_file_destination = os.path.join(user_tmp_dir, 'opt-input.xyz')
@@ -142,43 +149,8 @@ def optimize():
         with open(optimized_file_destination, 'r') as optimized_file:
             optimized_xyz_content = optimized_file.read()
 
-        success_message = f"⚙️ Optimization successful. ⏱️ Executed in {execution_time:.4f} seconds."
+        success_message = f"✅ Optimization executed {execution_time:.4f} sec.<br>⚡️ Old energy: {old_energy:.4f} eV<br>⚡️ New energy: {new_energy:.4f} eV"
         return jsonify({'optimized_xyz_content': optimized_xyz_content, 'message': success_message})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Route to calculate the energy of the optimized structure
-@app.route('/calculate_energy', methods=['POST'])
-def calculate_energy():
-    data = request.json
-    file_path = data.get('file_path')
-
-    if not file_path:
-        return jsonify({'error': 'File path is required'}), 400
-
-    # Convert relative path to absolute
-    file_path = os.path.join(app.root_path, file_path.lstrip('/'))
-
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'Optimized file not found'}), 400
-
-    try:
-        from static.src.get_energy import compute_energy
-        import io
-        import contextlib
-
-        # Capture the output of compute_energy
-        output = io.StringIO()
-        with contextlib.redirect_stdout(output):
-            compute_energy(file_path)
-        energy_output = output.getvalue().strip()
-
-        # Extract energy value from the output
-        if "Energy:" in energy_output:
-            energy = energy_output.split("Energy:")[1].strip()
-            return jsonify({'energy': energy})
-        else:
-            return jsonify({'error': 'Failed to calculate energy'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

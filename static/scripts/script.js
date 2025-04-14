@@ -1,3 +1,6 @@
+// ===============================
+// VIEWER SETUP (LEFT SECTION)
+// ===============================
 // Variables for the viewer
 const radius = 0.1; // Radius for stick representation
 const scale = 0.5; // Scale for sphere representation
@@ -28,9 +31,6 @@ function loadModelIntoViewer(data, colorscheme = "Jmol") {
     });
 }
 
-// Load the default XYZ file on page load
-fetchAndLoadFile("/static/examples/pd12pt1.xyz");
-
 // Utility function to fetch and load a file into the viewer
 function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
     jQuery.ajax({
@@ -50,6 +50,133 @@ function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
     viewer.render();
 }
 
+// Load the default XYZ file on page load
+fetchAndLoadFile("/static/examples/pd12pt1.xyz");
+
+// ===============================
+// UPLOAD XYZ FILE
+// ===============================
+// Add event listener to the "Upload XYZ" file input
+document.getElementById('file-upload').addEventListener('change', (event) => {
+    const file = event.target.files[0]; // Get the uploaded file
+    if (file && file.name.endsWith('.xyz')) { // Validate file extension
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const xyzData = e.target.result; // Read the file content
+            loadModelIntoViewer(xyzData); // Load the content into the viewer
+            fetch('/upload_xyz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ xyz_content: xyzData }), // Send the content to the server
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error("Error saving file on server:", data.error);
+                    } else {
+                        console.log("File saved successfully on server:", data.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        };
+        reader.readAsText(file); // Read the file as text
+    } else {
+        console.error("Please upload a valid .xyz file.");
+    }
+});
+
+// ===============================
+// RANDOM CLUSTER GENERATOR
+// ===============================
+// Add event listener to the "Generate Cluster" button
+document.getElementById('generate-button').addEventListener('click', () => {
+    const clusterInput = document.getElementById('cluster-input').value.trim(); // Get cluster configuration
+    if (!clusterInput) {
+        console.error("Cluster configuration is required.");
+        const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
+        overlayText.textContent = "❓ Cluster configuration is required."; // Display progress message
+        return;
+    }
+    fetch('/generate_cluster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cluster_config: clusterInput }), // Send the configuration to the server
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Error generating cluster:", data.error);
+            } else {
+                loadModelIntoViewer(data.xyz_content); // Load the generated cluster into the viewer
+                console.log("Cluster generated and loaded successfully.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+});
+
+// ===============================
+// OPTIMIZER
+// ===============================
+// Add event listener to the "Optimize Structure" button
+document.getElementById('optimize-button').addEventListener('click', () => {
+    const xyzContent = generateXYZContent(); // Generate XYZ content from the viewer
+    if (!xyzContent) return;
+
+    const selectedMethod = document.querySelector('input[name="optimization-method"]:checked').value; // Get selected optimization method
+
+    const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
+    overlayText.textContent = "⚙️ Optimization in progress..."; // Display progress message
+
+    fetch('/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ xyz_content: xyzContent, method: selectedMethod }), // Send optimization request
+    })
+        .then(response => response.json())
+        .then(async (data) => {
+            // Ensure the message is displayed for at least 1 second
+            setTimeout(async () => {
+                if (data.error) {
+                    overlayText.innerHTML = "Error optimizing structure."; // Cambiado a innerHTML
+                    console.error("Error optimizing structure:", data.error);
+                    overlayText.innerHTML = `🚫 Atomic pair interaction not supported: ${data.error}`; // Cambiado a innerHTML
+                } else {
+                    overlayText.innerHTML = data.message; // Cambiado a innerHTML
+                    console.log(data.message);
+
+                    // Automatically load the optimized structure
+                    try {
+                        const response = await fetch('/get_user_uuid');
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch user UUID');
+                        }
+                        const userData = await response.json();
+                        const userId = userData.user_id;
+
+                        // Construct the path to the optimized file
+                        const optimizedFilePath = `/static/tmp/${userId}/opt-input.xyz`;
+
+                        // Load the optimized file into the viewer
+                        fetchAndLoadFile(optimizedFilePath);
+                        console.log(`Optimized file loaded from ${optimizedFilePath}`);
+                    } catch (error) {
+                        console.error('Error loading optimized structure:', error);
+                    }
+                }
+            }, 1000);
+        })
+        .catch(error => {
+            // Ensure the message is displayed for at least 1 second in case of error
+            setTimeout(() => {
+                overlayText.textContent = "Error optimizing structure."; // Display error message
+                console.error("Error:", error);
+            }, 1000);
+        });
+});
+
+// ===============================
+// COLOR SCHEMA
+// ===============================
 // Add event listener to the "Change Color Scheme" radio buttons
 document.querySelectorAll('input[name="color-schema"]').forEach(input => {
     input.addEventListener('change', (event) => {
@@ -63,22 +190,24 @@ document.querySelectorAll('input[name="color-schema"]').forEach(input => {
     });
 });
 
-// Add event listener to the "Download PNG" button
-document.getElementById('download-png').addEventListener('click', () => {
-    if (viewer) {
-        const pngURI = viewer.pngURI(); // Generate PNG URI from the viewer
-        const link = document.createElement('a');
-        link.href = pngURI;
-        link.download = 'cluster_viewer.png'; // Set the download file name
-        document.body.appendChild(link);
-        link.click(); // Trigger the download
-        document.body.removeChild(link);
-        console.log("PNG image downloaded successfully.");
-    } else {
-        console.error("Viewer is not initialized. Cannot download PNG.");
-    }
+// Function to update the viewer's background color
+function updateViewerBackgroundColor(isDarkMode) {
+    config.backgroundColor = isDarkMode ? 0x121212 : 0xf5f5f5; // Change color based on mode
+    viewer.setBackgroundColor(config.backgroundColor); // Update the viewer's background color
+    viewer.render(); // Re-render the viewer
+}
+
+// Listener for the dark mode toggle
+document.getElementById('dark-mode-toggle').addEventListener('change', (event) => {
+    const isDarkMode = event.target.checked;
+    document.body.classList.toggle('dark-mode', isDarkMode); // Toggle dark mode class on the body
+    updateViewerBackgroundColor(isDarkMode); // Update the viewer's background color
+    console.log(isDarkMode ? "Dark mode activated." : "Dark mode deactivated.");
 });
 
+// ===============================
+// DOWNLOAD FILE
+// ===============================
 // Utility function to generate XYZ content from the viewer's model
 function generateXYZContent() {
     const model = viewer.getModel(); // Get the current model from the viewer
@@ -112,173 +241,18 @@ document.getElementById('download-xyz').addEventListener('click', () => {
     }
 });
 
-// Add event listener to the "Upload XYZ" file input
-document.getElementById('file-upload').addEventListener('change', (event) => {
-    const file = event.target.files[0]; // Get the uploaded file
-    if (file && file.name.endsWith('.xyz')) { // Validate file extension
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const xyzData = e.target.result; // Read the file content
-            loadModelIntoViewer(xyzData); // Load the content into the viewer
-            fetch('/upload_xyz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ xyz_content: xyzData }), // Send the content to the server
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        console.error("Error saving file on server:", data.error);
-                    } else {
-                        console.log("File saved successfully on server:", data.message);
-                    }
-                })
-                .catch(error => console.error("Error:", error));
-        };
-        reader.readAsText(file); // Read the file as text
+// Add event listener to the "Download PNG" button
+document.getElementById('download-png').addEventListener('click', () => {
+    if (viewer) {
+        const pngURI = viewer.pngURI(); // Generate PNG URI from the viewer
+        const link = document.createElement('a');
+        link.href = pngURI;
+        link.download = 'cluster_viewer.png'; // Set the download file name
+        document.body.appendChild(link);
+        link.click(); // Trigger the download
+        document.body.removeChild(link);
+        console.log("PNG image downloaded successfully.");
     } else {
-        console.error("Please upload a valid .xyz file.");
+        console.error("Viewer is not initialized. Cannot download PNG.");
     }
-});
-
-// Add event listener to the "Generate Cluster" button
-document.getElementById('generate-button').addEventListener('click', () => {
-    const clusterInput = document.getElementById('cluster-input').value.trim(); // Get cluster configuration
-    if (!clusterInput) {
-        console.error("Cluster configuration is required.");
-        const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
-        overlayText.textContent = "❓ Cluster configuration is required."; // Display progress message
-        return;
-    }
-    fetch('/generate_cluster', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cluster_config: clusterInput }), // Send the configuration to the server
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error("Error generating cluster:", data.error);
-            } else {
-                loadModelIntoViewer(data.xyz_content); // Load the generated cluster into the viewer
-                console.log("Cluster generated and loaded successfully.");
-            }
-        })
-        .catch(error => console.error("Error:", error));
-});
-
-// Add event listener to the "Optimize Structure" button
-document.getElementById('optimize-button').addEventListener('click', () => {
-    const xyzContent = generateXYZContent(); // Generate XYZ content from the viewer
-    if (!xyzContent) return;
-
-    const selectedMethod = document.querySelector('input[name="optimization-method"]:checked').value; // Get selected optimization method
-
-    const overlayText = document.querySelector('.overlay-text'); // Select the overlay-text element
-    overlayText.textContent = "⚙️ Optimization in progress..."; // Display progress message
-
-    fetch('/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xyz_content: xyzContent, method: selectedMethod }), // Send optimization request
-    })
-        .then(response => response.json())
-        .then(async (data) => {
-            // Ensure the message is displayed for at least 1 second
-            setTimeout(async () => {
-                if (data.error) {
-                    overlayText.textContent = "Error optimizing structure."; // Display error message
-                    console.error("Error optimizing structure:", data.error);
-                    overlayText.textContent = `🚫 Atomic pair interaction not supported: ${data.error}`; // Display error message
-                } else {
-                    overlayText.textContent = data.message; // Display success message
-                    console.log(data.message);
-
-                    // Automatically load the optimized structure
-                    try {
-                        const response = await fetch('/get_user_uuid');
-                        if (!response.ok) {
-                            throw new Error('Failed to fetch user UUID');
-                        }
-                        const userData = await response.json();
-                        const userId = userData.user_id;
-
-                        // Construct the path to the optimized file
-                        const optimizedFilePath = `/static/tmp/${userId}/opt-input.xyz`;
-
-                        // Load the optimized file into the viewer
-                        fetchAndLoadFile(optimizedFilePath);
-                        console.log(`Optimized file loaded from ${optimizedFilePath}`);
-                    } catch (error) {
-                        console.error('Error loading optimized structure:', error);
-                    }
-                }
-            }, 1000);
-        })
-        .catch(error => {
-            // Ensure the message is displayed for at least 1 second in case of error
-            setTimeout(() => {
-                overlayText.textContent = "Error optimizing structure."; // Display error message
-                console.error("Error:", error);
-            }, 1000);
-        });
-});
-
-// Add event listener to the "Energy" button
-document.getElementById('get_energy').addEventListener('click', async () => {
-    const overlayText = document.querySelector('.overlay-text');
-    overlayText.textContent = "⚡️ Energy calculation in progress...";
-
-    try {
-        // Fetch the user's UUID to locate the optimized file
-        const response = await fetch('/get_user_uuid');
-        if (!response.ok) {
-            throw new Error('Failed to fetch user UUID');
-        }
-        const data = await response.json();
-        const userId = data.user_id;
-
-        // Path to the optimized file
-        const optimizedFilePath = `/static/tmp/${userId}/opt-input.xyz`;
-        console.log("File path sent to server:", optimizedFilePath);
-
-        const energyResponse = await fetch('/calculate_energy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_path: optimizedFilePath }), // Send the file path to the server
-        });
-
-        if (!energyResponse.ok) {
-            throw new Error('Failed to calculate energy');
-        }
-
-        const energyData = await energyResponse.json();
-        if (energyData.error) {
-            throw new Error(energyData.error);
-        }
-
-        // Ensure the message is displayed for at least 1 second
-        setTimeout(() => {
-            overlayText.textContent = `⚡️ Energy: ${energyData.energy}`; // Display the calculated energy
-        }, 1000);
-    } catch (error) {
-        console.error('Error calculating energy:', error);
-        setTimeout(() => {
-            overlayText.textContent = "Error calculating energy."; // Display error message
-        }, 1000);
-    }
-});
-// Function to update the viewer's background color
-function updateViewerBackgroundColor(isDarkMode) {
-    config.backgroundColor = isDarkMode ? 0x121212 : 0xf5f5f5; // Change color based on mode
-    viewer.setBackgroundColor(config.backgroundColor); // Update the viewer's background color
-    viewer.render(); // Re-render the viewer
-}
-
-// Listener for the dark mode toggle
-document.getElementById('dark-mode-toggle').addEventListener('change', (event) => {
-    const isDarkMode = event.target.checked;
-    document.body.classList.toggle('dark-mode', isDarkMode); // Toggle dark mode class on the body
-    updateViewerBackgroundColor(isDarkMode); // Update the viewer's background color
-    console.log(isDarkMode ? "Dark mode activated." : "Dark mode deactivated.");
 });
