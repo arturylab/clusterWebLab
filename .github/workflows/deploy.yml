@@ -1,0 +1,23 @@
+name: Deploy to Oracle VM
+
+on:
+  push:
+    branches:
+      - main  # o la rama que uses para producción
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Pull latest changes
+      run: |
+        cd /home/ubuntu/clusterWebApp  # reemplaza con el nombre de tu carpeta
+        git pull origin main
+
+    - name: Restart Gunicorn service
+      run: |
+        sudo systemctl daemon-reexec
+        sudo systemctl daemon-reload
+        sudo systemctl restart flaskapp
+        sudo systemctl status flaskapp
