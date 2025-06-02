@@ -3,7 +3,7 @@ name: Deploy to Oracle VM
 on:
   push:
     branches:
-      - main  # o la rama que uses para producción
+      - main  # or the branch you use for production
 
 jobs:
   deploy:
@@ -12,7 +12,7 @@ jobs:
     steps:
     - name: Pull latest changes
       run: |
-        cd /home/ubuntu/clusterWebApp  # reemplaza con el nombre de tu carpeta
+        cd /home/ubuntu/clusterWebLab  # replace with the name of your folder
         git pull origin main
 
     - name: Restart Gunicorn service
