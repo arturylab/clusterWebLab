@@ -1,3 +1,8 @@
+/* ============================================ */
+/* CSS CUSTOM PROPERTIES & THEME VARIABLES     */
+/* ============================================ */
+
+/* Light theme color palette and design tokens */
 :root {
     --primary-blue: #0066cc;
     --primary-blue-dark: #0052a3;
@@ -21,6 +26,7 @@
     --glass-border: rgba(255, 255, 255, 0.2);
 }
 
+/* Dark theme color overrides */
 [data-theme="dark"] {
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
@@ -33,6 +39,10 @@
     --glass-bg: rgba(0, 0, 0, 0.2);
     --glass-border: rgba(255, 255, 255, 0.1);
 }
+
+/* ============================================ */
+/* GLOBAL STYLES & RESET                       */
+/* ============================================ */
 
 * {
     margin: 0;
@@ -48,6 +58,10 @@ body {
     transition: all 0.3s ease;
 }
 
+/* ============================================ */
+/* MAIN LAYOUT - SPLIT SCREEN GRID             */
+/* ============================================ */
+
 .app-container {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -55,14 +69,17 @@ body {
     gap: 0;
 }
 
-/* Left Section - Viewer */
+/* ============================================ */
+/* LEFT SECTION - 3D VIEWER                    */
+/* ============================================ */
+
 .viewer-section {
     background-color: #f8fafc;
     position: relative;
     border-right: none;
-    border-top: none; /* Asegurar que no hay borde superior */
-    border-bottom: none; /* Asegurar que no hay borde inferior */
-    border-left: none; /* Asegurar que no hay borde izquierdo */
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
     overflow: hidden;
 }
 
@@ -107,7 +124,10 @@ body {
     background: var(--bg-secondary);
 }
 
-/* Contenedor de notificaciones */
+/* ============================================ */
+/* NOTIFICATION SYSTEM                          */
+/* ============================================ */
+
 .viewer-notifications {
     min-width: 300px;
     max-width: 400px;
@@ -117,7 +137,6 @@ body {
     align-items: flex-end;
 }
 
-/* Estilos para las notificaciones individuales */
 .notification {
     background: transparent;
     border: none;
@@ -135,11 +154,11 @@ body {
     word-wrap: break-word;
     overflow: hidden;
     position: relative;
-    cursor: pointer; /* Agregar cursor pointer para indicar que es clickeable */
+    cursor: pointer;
 }
 
 .notification:hover {
-    transform: translateX(-2px); /* Pequeño efecto hover para indicar interactividad */
+    transform: translateX(-2px);
     box-shadow: var(--shadow-large);
 }
 
@@ -149,7 +168,7 @@ body {
 }
 
 .notification.show:hover {
-    transform: translateX(-2px); /* Mantener el efecto hover cuando está visible */
+    transform: translateX(-2px);
 }
 
 .notification-content {
@@ -164,7 +183,7 @@ body {
     flex-grow: 1;
     padding-right: 25px;
     line-height: 1.4;
-    pointer-events: none; /* Prevenir que el texto interfiera con el clic */
+    pointer-events: none;
 }
 
 .notification-close {
@@ -187,7 +206,7 @@ body {
     border-radius: 50%;
     transition: all 0.2s ease;
     opacity: 0.6;
-    pointer-events: none; /* El botón ya no necesita ser clickeable individualmente */
+    pointer-events: none;
 }
 
 .notification-close:hover {
@@ -196,7 +215,10 @@ body {
     transform: scale(1.1);
 }
 
-/* Right Section - Controls */
+/* ============================================ */
+/* RIGHT SECTION - CONTROL PANELS              */
+/* ============================================ */
+
 .controls-section {
     background: var(--bg-primary);
     border-left: 1px solid var(--border-light);
@@ -232,6 +254,10 @@ body {
     flex-direction: column;
     gap: 1.5rem;
 }
+
+/* ============================================ */
+/* CONTROL PANELS & CARDS                      */
+/* ============================================ */
 
 .control-panel {
     background: var(--bg-secondary);
@@ -275,7 +301,10 @@ body {
     line-height: 1.4;
 }
 
-/* Form Elements */
+/* ============================================ */
+/* FORM ELEMENTS & INPUTS                      */
+/* ============================================ */
+
 .form-group {
     margin-bottom: 1rem;
 }
@@ -306,6 +335,7 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
 }
 
+/* File upload drag & drop area */
 .file-upload-area {
     border: 2px dashed var(--border-medium);
     border-radius: 12px;
@@ -347,7 +377,10 @@ body {
     display: none;
 }
 
-/* Buttons */
+/* ============================================ */
+/* BUTTONS & INTERACTIVE ELEMENTS              */
+/* ============================================ */
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -394,7 +427,10 @@ body {
     width: 100%;
 }
 
-/* Radio Groups */
+/* ============================================ */
+/* RADIO GROUPS & SELECTION CONTROLS           */
+/* ============================================ */
+
 .radio-group {
     display: flex;
     flex-direction: column;
@@ -426,7 +462,7 @@ body {
     border-color: var(--primary-blue);
 }
 
-/* Toggle Switch */
+/* Dark mode toggle switch */
 .toggle-container {
     display: flex;
     align-items: center;
@@ -466,7 +502,10 @@ body {
     transform: translateX(24px);
 }
 
-/* Info Panel */
+/* ============================================ */
+/* INFO PANELS & CONTENT BLOCKS                */
+/* ============================================ */
+
 .info-panel {
     background: rgba(0, 166, 147, 0.05);
     border: 1px solid rgba(0, 166, 147, 0.2);
@@ -488,14 +527,16 @@ body {
     line-height: 1.4;
 }
 
-/* Download Section */
 .download-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
 }
 
-/* Footer */
+/* ============================================ */
+/* FOOTER & LAYOUT UTILITIES                   */
+/* ============================================ */
+
 .controls-footer {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-light);
@@ -523,7 +564,10 @@ body {
     text-decoration: underline;
 }
 
-/* Loading States */
+/* ============================================ */
+/* LOADING STATES & ANIMATIONS                 */
+/* ============================================ */
+
 .loading {
     position: relative;
     opacity: 0.6;
@@ -548,7 +592,10 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Dark mode styles */
+/* ============================================ */
+/* DARK MODE OVERRIDES                         */
+/* ============================================ */
+
 body.dark-mode {
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
@@ -562,11 +609,12 @@ body.dark-mode {
     .viewer-section {
         background-color: #121212;
     }
-
 }
 
+/* ============================================ */
+/* RESPONSIVE DESIGN BREAKPOINTS               */
+/* ============================================ */
 
-/* Responsive Design */
 @media (max-width: 1024px) {
     .app-container {
         grid-template-columns: 1fr;

@@ -1,65 +1,66 @@
-// ===============================
-// VIEWER SETUP (LEFT SECTION)
-// ===============================
+/* ============================================ */
+/* 3D MOLECULAR VIEWER INITIALIZATION         */
+/* ============================================ */
+
+// 3DMol.js viewer configuration and setup
 const radius = 0.1;
 const scale = 0.5;
-
 const element = document.querySelector('#left-section');
 const config = { backgroundColor: 0xf8fafc };
 const viewer = $3Dmol.createViewer(element, config);
 
-// Notification system management
+/* ============================================ */
+/* NOTIFICATION SYSTEM                         */
+/* ============================================ */
+
 const notificationsContainer = document.getElementById('viewer-notifications');
 let notificationCounter = 0;
 
+// Create and display user notifications with auto-dismiss
 function showNotification(message, type = 'info', duration = 5000) {
-    // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.id = `notification-${++notificationCounter}`;
     
-    // Crear el contenido de la notificación con botón de cierre
     notification.innerHTML = `
         <div class="notification-content">
             <div class="notification-message">${message}</div>
-            <button class="notification-close" aria-label="Cerrar notificación">
+            <button class="notification-close" aria-label="Close notification">
                 ×
             </button>
         </div>
     `;
     
-    // Agregar al contenedor
     notificationsContainer.appendChild(notification);
     
-    // Mostrar con animación
+    // Animate notification appearance
     setTimeout(() => {
         notification.classList.add('show');
     }, 100);
     
-    // Auto-remove después del duration (guardar el timeoutId para poder cancelarlo)
+    // Auto-remove notification after duration
     const timeoutId = setTimeout(() => {
         removeNotification(notification.id);
     }, duration);
     
-    // Guardar el timeoutId en el elemento para poder cancelarlo si se cierra manualmente
     notification.timeoutId = timeoutId;
     
-    // Agregar event listener para cerrar al hacer clic en toda la notificación
+    // Click to dismiss functionality
     notification.addEventListener('click', () => {
         removeNotification(notification.id);
     });
     
-    // Limitar el número de notificaciones visibles (máximo 3)
+    // Limit maximum visible notifications to 3
     const notifications = notificationsContainer.querySelectorAll('.notification');
     if (notifications.length > 3) {
         removeNotification(notifications[0].id);
     }
 }
 
+// Remove notification with smooth animation
 function removeNotification(notificationId) {
     const notification = document.getElementById(notificationId);
     if (notification) {
-        // Cancelar el timeout automático si existe
         if (notification.timeoutId) {
             clearTimeout(notification.timeoutId);
         }
@@ -73,11 +74,16 @@ function removeNotification(notificationId) {
     }
 }
 
-// Función de compatibilidad con el código existente
+// Legacy compatibility function
 function showStatus(message, duration = 5000, type = 'info') {
     showNotification(message, type, duration);
 }
 
+/* ============================================ */
+/* MOLECULAR STRUCTURE RENDERING              */
+/* ============================================ */
+
+// Load and render molecular structures in 3D viewer
 function loadModelIntoViewer(data, colorscheme = "Jmol") {
     viewer.removeAllModels();
     viewer.addModel(data, "xyz");
@@ -89,12 +95,14 @@ function loadModelIntoViewer(data, colorscheme = "Jmol") {
     viewer.render();
     console.log("Model loaded successfully.");
 
+    // Handle viewer resize events
     window.addEventListener('resize', () => {
         viewer.resize();
         viewer.render();
     });
 }
 
+// Fetch structure files from server and load into viewer
 function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
     jQuery.ajax({
         url: filePath,
@@ -114,18 +122,21 @@ function fetchAndLoadFile(filePath, colorscheme = "Jmol") {
     viewer.render();
 }
 
-// Load default file
+// Initialize application with default structure
 fetchAndLoadFile("/static/examples/pd12pt1.xyz");
 setTimeout(() => showNotification("🔬 Welcome to ClusterWebLab - Advanced Molecular Analysis Platform", "info", 6000), 1000);
 
-// ===============================
-// FILE UPLOAD WITH DRAG & DROP
-// ===============================
+/* ============================================ */
+/* FILE UPLOAD & DRAG-DROP INTERFACE          */
+/* ============================================ */
+
 const fileUploadArea = document.getElementById('file-upload-area');
 const fileInput = document.getElementById('file-upload');
 
+// File selection through click interface
 fileUploadArea.addEventListener('click', () => fileInput.click());
 
+// Drag and drop event handlers
 fileUploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     fileUploadArea.classList.add('dragover');
@@ -150,6 +161,7 @@ fileInput.addEventListener('change', (e) => {
     }
 });
 
+// Process uploaded XYZ files and send to server
 function handleFileUpload(file) {
     if (file && file.name.endsWith('.xyz')) {
         showNotification("📁 Loading structure...", "info", 3000);
@@ -157,6 +169,8 @@ function handleFileUpload(file) {
         reader.onload = function (e) {
             const xyzData = e.target.result;
             loadModelIntoViewer(xyzData);
+            
+            // Upload file content to server
             fetch('/upload_xyz', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -183,9 +197,10 @@ function handleFileUpload(file) {
     }
 }
 
-// ===============================
-// CLUSTER GENERATOR
-// ===============================
+/* ============================================ */
+/* RANDOM CLUSTER GENERATION                   */
+/* ============================================ */
+
 document.getElementById('generate-button').addEventListener('click', () => {
     const clusterInput = document.getElementById('cluster-input').value.trim();
     if (!clusterInput) {
@@ -197,6 +212,7 @@ document.getElementById('generate-button').addEventListener('click', () => {
     button.classList.add('loading');
     showNotification("🧬 Generating cluster structure...", "info", 8000);
     
+    // Request random cluster generation from server
     fetch('/generate_cluster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -221,9 +237,10 @@ document.getElementById('generate-button').addEventListener('click', () => {
     });
 });
 
-// ===============================
-// OPTIMIZER
-// ===============================
+/* ============================================ */
+/* STRUCTURE OPTIMIZATION ENGINE               */
+/* ============================================ */
+
 document.getElementById('optimize-button').addEventListener('click', () => {
     const xyzContent = generateXYZContent();
     if (!xyzContent) return;
@@ -234,6 +251,7 @@ document.getElementById('optimize-button').addEventListener('click', () => {
     button.classList.add('loading');
     showNotification("⚙️ Optimizing molecular structure...", "info", 15000);
 
+    // Send structure for computational optimization
     fetch('/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,11 +265,10 @@ document.getElementById('optimize-button').addEventListener('click', () => {
                 showNotification(`❌ Error: ${data.error}`, "error", 8000);
                 console.error("Error optimizing structure:", data.error);
             } else {
-                // Mostrar mensaje de éxito con energías por 15 segundos
                 showNotification(data.message, "success", 15000);
                 console.log(data.message);
 
-                // Automatically load the optimized structure
+                // Load optimized structure automatically
                 try {
                     const response = await fetch('/get_user_uuid');
                     if (!response.ok) {
@@ -260,10 +277,7 @@ document.getElementById('optimize-button').addEventListener('click', () => {
                     const userData = await response.json();
                     const userId = userData.user_id;
 
-                    // Construct the path to the optimized file
                     const optimizedFilePath = `/static/tmp/${userId}/opt-input.xyz`;
-
-                    // Load the optimized file into the viewer
                     fetchAndLoadFile(optimizedFilePath);
                     console.log(`Optimized file loaded from ${optimizedFilePath}`);
                 } catch (error) {
@@ -281,9 +295,11 @@ document.getElementById('optimize-button').addEventListener('click', () => {
     });
 });
 
-// ===============================
-// COLOR SCHEMA
-// ===============================
+/* ============================================ */
+/* VISUALIZATION CONTROLS                      */
+/* ============================================ */
+
+// Color scheme selection for molecular rendering
 document.querySelectorAll('input[name="color-schema"]').forEach(input => {
     input.addEventListener('change', (event) => {
         const selectedScheme = event.target.value;
@@ -294,7 +310,7 @@ document.querySelectorAll('input[name="color-schema"]').forEach(input => {
         viewer.render();
         console.log(`Color scheme changed to ${selectedScheme}.`);
         
-        // Update radio option selection visual
+        // Update visual selection indicator
         document.querySelectorAll('.radio-option').forEach(option => {
             option.classList.remove('selected');
         });
@@ -302,9 +318,7 @@ document.querySelectorAll('input[name="color-schema"]').forEach(input => {
     });
 });
 
-// ===============================
-// DARK MODE TOGGLE
-// ===============================
+// Dark mode toggle with viewer background update
 function updateViewerBackgroundColor(isDarkMode) {
     config.backgroundColor = isDarkMode ? 0x121212 : 0xf8fafc;
     viewer.setBackgroundColor(config.backgroundColor);
@@ -322,9 +336,11 @@ document.getElementById('dark-mode-toggle').addEventListener('click', () => {
     console.log(isDarkMode ? "Dark mode activated." : "Dark mode deactivated.");
 });
 
-// ===============================
-// DOWNLOAD FUNCTIONS
-// ===============================
+/* ============================================ */
+/* FILE EXPORT & DOWNLOAD SYSTEM              */
+/* ============================================ */
+
+// Generate XYZ coordinate data from current viewer model
 function generateXYZContent() {
     const model = viewer.getModel();
     if (!model) {
@@ -343,6 +359,7 @@ function generateXYZContent() {
     ).join('\n');
 }
 
+// Download current structure as XYZ file
 document.getElementById('download-xyz').addEventListener('click', () => {
     const xyzContent = generateXYZContent();
     if (xyzContent) {
@@ -358,6 +375,7 @@ document.getElementById('download-xyz').addEventListener('click', () => {
     }
 });
 
+// Export current view as PNG image
 document.getElementById('download-png').addEventListener('click', () => {
     if (viewer) {
         const pngURI = viewer.pngURI();
@@ -375,9 +393,11 @@ document.getElementById('download-png').addEventListener('click', () => {
     }
 });
 
-// ===============================
-// RADIO BUTTON INTERACTIONS
-// ===============================
+/* ============================================ */
+/* UI INTERACTION HANDLERS                     */
+/* ============================================ */
+
+// Optimization method selection visual feedback
 document.querySelectorAll('input[name="optimization-method"]').forEach(input => {
     input.addEventListener('change', (event) => {
         document.querySelectorAll('input[name="optimization-method"]').forEach(radio => {

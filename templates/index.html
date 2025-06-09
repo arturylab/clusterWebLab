@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Character encoding and viewport configuration -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Page title and metadata -->
     <title>ClusterWebLab - Molecular Cluster Analysis Platform</title>
+    
+    <!-- External font imports for typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Application favicon and stylesheets -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
+    <!-- Main application container with split-screen layout -->
     <div class="app-container">
-        <!-- Left Section - 3D Viewer -->
+        
+        <!-- ============================================ -->
+        <!-- LEFT SECTION: 3D MOLECULAR VISUALIZATION    -->
+        <!-- ============================================ -->
         <div class="viewer-section">
+            <!-- Viewer header with title and notification area -->
             <div class="viewer-header">
                 <div class="viewer-info">
                     <div class="viewer-title">
@@ -23,25 +35,37 @@
                         Interactive visualization of atomic clusters
                     </div>
                 </div>
+                <!-- Real-time notification system for user feedback -->
                 <div class="viewer-notifications" id="viewer-notifications">
-                    <!-- Las notificaciones aparecerán aquí -->
+                    <!-- Dynamic notifications will be injected here -->
                 </div>
             </div>
+            
+            <!-- 3DMol.js canvas container for molecular rendering -->
             <div class="viewer-canvas" id="left-section" aria-live="polite"></div>
+            
+            <!-- Status overlay for loading states (hidden by default) -->
             <div class="status-overlay" id="status-overlay" style="display: none;">
-                <!-- Mantenemos este elemento oculto para compatibilidad -->
+                <!-- Maintained for backward compatibility -->
             </div>
         </div>
 
-        <!-- Right Section - Controls -->
+        <!-- ============================================ -->
+        <!-- RIGHT SECTION: CONTROL PANELS & TOOLS       -->
+        <!-- ============================================ -->
         <div class="controls-section">
+            <!-- Application header with branding -->
             <div class="controls-header">
                 <div class="app-logo">ClusterWebLab 🧪</div>
                 <div class="app-description">Advanced Cluster Analysis Platform</div>
             </div>
 
+            <!-- Main controls container -->
             <div class="controls-content">
-                <!-- File Upload Panel -->
+                
+                <!-- ==================== -->
+                <!-- FILE IMPORT PANEL    -->
+                <!-- ==================== -->
                 <div class="control-panel">
                     <div class="panel-header">
                         <div class="panel-icon">📁</div>
@@ -50,15 +74,19 @@
                     <div class="panel-description">
                         Import molecular structures from XYZ coordinate files for visualization and analysis.
                     </div>
+                    <!-- Drag-and-drop file upload area -->
                     <div class="file-upload-area" id="file-upload-area">
                         <div class="upload-icon">⬆️</div>
                         <div class="upload-text">Drop XYZ file here or click to browse</div>
                         <div class="upload-subtext">Supports standard XYZ coordinate format</div>
+                        <!-- Hidden file input for programmatic access -->
                         <input type="file" id="file-upload" class="hidden-file-input" accept=".xyz">
                     </div>
                 </div>
 
-                <!-- Random Cluster Generator Panel -->
+                <!-- ========================== -->
+                <!-- CLUSTER GENERATOR PANEL   -->
+                <!-- ========================== -->
                 <div class="control-panel">
                     <div class="panel-header">
                         <div class="panel-icon">🧬</div>
@@ -67,16 +95,20 @@
                     <div class="panel-description">
                         Generate random molecular clusters with specified atomic compositions.
                     </div>
+                    <!-- Formula input for cluster composition -->
                     <div class="form-group">
                         <label class="form-label" for="cluster-input">Cluster Formula</label>
                         <input type="text" id="cluster-input" class="form-input" placeholder="e.g., Pd12Pt1, Au13, CuPd8">
                     </div>
+                    <!-- Generate button triggers random structure creation -->
                     <button id="generate-button" class="btn btn-primary btn-full">
                         ⚡ Generate Structure
                     </button>
                 </div>
 
-                <!-- Optimization Panel -->
+                <!-- ========================== -->
+                <!-- OPTIMIZATION PANEL         -->
+                <!-- ========================== -->
                 <div class="control-panel">
                     <div class="panel-header">
                         <div class="panel-icon">⚙️</div>
@@ -86,6 +118,7 @@
                         Optimize molecular geometries using advanced computational methods.
                     </div>
                     
+                    <!-- Supported element information -->
                     <div class="info-panel">
                         <div class="info-title">Supported Interactions</div>
                         <div class="info-content">
@@ -94,9 +127,11 @@
                         </div>
                     </div>
 
+                    <!-- Optimization algorithm selection -->
                     <div class="form-group">
                         <label class="form-label">Optimization Method</label>
                         <div class="radio-group">
+                            <!-- Local optimization algorithm -->
                             <label class="radio-option" for="L-BFGS-B">
                                 <input type="radio" id="L-BFGS-B" name="optimization-method" value="L-BFGS-B" checked>
                                 <div>
@@ -104,6 +139,7 @@
                                     <div style="font-size: 0.75rem; color: var(--text-muted);">Fast local minimum search</div>
                                 </div>
                             </label>
+                            <!-- Global optimization algorithm -->
                             <label class="radio-option" for="basinhopping">
                                 <input type="radio" id="basinhopping" name="optimization-method" value="basinhopping">
                                 <div>
@@ -113,12 +149,15 @@
                             </label>
                         </div>
                     </div>
+                    <!-- Optimization execution button -->
                     <button id="optimize-button" class="btn btn-primary btn-full">
                         🚀 Optimize Structure
                     </button>
                 </div>
 
-                <!-- Visualization Panel -->
+                <!-- ========================== -->
+                <!-- VISUALIZATION PANEL        -->
+                <!-- ========================== -->
                 <div class="control-panel">
                     <div class="panel-header">
                         <div class="panel-icon">🎨</div>
@@ -128,13 +167,16 @@
                         Customize the appearance and color scheme of molecular structures.
                     </div>
                     
+                    <!-- Color scheme selection for atomic rendering -->
                     <div class="form-group">
                         <label class="form-label">Color Scheme</label>
                         <div class="radio-group">
+                            <!-- Jmol standard color scheme -->
                             <label class="radio-option selected" for="Jmol">
                                 <input type="radio" id="Jmol" name="color-schema" value="Jmol" checked>
                                 <div>Jmol Colors</div>
                             </label>
+                            <!-- Rasmol alternative color scheme -->
                             <label class="radio-option" for="default">
                                 <input type="radio" id="default" name="color-schema" value="default">
                                 <div>Rasmol Colors</div>
@@ -142,6 +184,7 @@
                         </div>
                     </div>
                     
+                    <!-- Dark mode toggle switch -->
                     <div class="toggle-container">
                         <label class="form-label" style="margin-bottom: 0;">Dark Mode</label>
                         <div class="toggle-switch" id="dark-mode-toggle">
@@ -150,7 +193,9 @@
                     </div>
                 </div>
 
-                <!-- Export Panel -->
+                <!-- ========================== -->
+                <!-- EXPORT & DOWNLOAD PANEL    -->
+                <!-- ========================== -->
                 <div class="control-panel">
                     <div class="panel-header">
                         <div class="panel-icon">💾</div>
@@ -159,10 +204,13 @@
                     <div class="panel-description">
                         Export optimized structures and high-quality visualizations.
                     </div>
+                    <!-- Download options grid -->
                     <div class="download-grid">
+                        <!-- XYZ coordinate file download -->
                         <button id="download-xyz" class="btn btn-secondary">
                             📄 XYZ File
                         </button>
+                        <!-- PNG image export -->
                         <button id="download-png" class="btn btn-secondary">
                             🖼️ PNG Image
                         </button>
@@ -170,9 +218,10 @@
                 </div>
             </div>
 
+            <!-- Application footer with credits and links -->
             <div class="controls-footer">
                 <div class="footer-content">
-                    <div>Developed by <strong>arturyLab</strong> 🧪</div>
+                    <div>Developed by <strong>arturyLab</strong> 🧪 Version 2.0</div>
                     <div class="footer-links">
                         <a href="https://github.com/arturylab/clusterWebLab" target="_blank">
                             ⭐ GitHub Repository
@@ -183,9 +232,14 @@
         </div>
     </div>
 
-    <!-- External Libraries -->
+    <!-- ============================================ -->
+    <!-- EXTERNAL JAVASCRIPT LIBRARIES              -->
+    <!-- ============================================ -->
+    <!-- 3DMol.js library for molecular visualization -->
     <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <!-- jQuery library for DOM manipulation -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Custom application logic -->
     <script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
 </body>
 </html>

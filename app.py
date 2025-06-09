@@ -12,25 +12,26 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Route to retrieve the unique user ID from the session
+# API endpoint to retrieve the unique user ID stored in the session
 @app.route('/get_user_uuid', methods=['GET'])
 def get_user_uuid():
     if 'user_id' not in session:
         return jsonify({'error': 'User not identified'}), 400
     return jsonify({'user_id': session['user_id']})
 
-# Route to render the home page and initialize user session
+# Main route that renders the home page and initializes user session with temporary workspace
 @app.route('/')
 def home():
+    # Generate unique user ID if not already present in session
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
     user_id = session['user_id']
 
-    # Create a unique temporary directory for the user
+    # Create isolated temporary directory structure for each user session
     user_tmp_dir = os.path.join(app.root_path, 'static', 'tmp', user_id)
     os.makedirs(user_tmp_dir, exist_ok=True)
 
-    # Copy example files to the user's temporary directory
+    # Initialize user workspace with default example files (pd12pt1.xyz cluster)
     source_file = os.path.join(app.root_path, 'static', 'examples', 'pd12pt1.xyz')
     destination_file = os.path.join(user_tmp_dir, 'input.xyz')
 
@@ -38,6 +39,7 @@ def home():
     opt_destination_file = os.path.join(user_tmp_dir, 'opt-input.xyz')
 
     try:
+        # Copy example files to user's workspace for immediate visualization
         if os.path.exists(source_file):
             with open(source_file, 'r') as src, open(destination_file, 'w') as dest:
                 dest.write(src.read())
@@ -49,9 +51,10 @@ def home():
 
     return render_template('index.html')
 
-# Route to upload XYZ file content
+# API endpoint to handle user-uploaded XYZ molecular structure files
 @app.route('/upload_xyz', methods=['POST'])
 def upload_xyz():
+    # Validate user session before processing upload
     if 'user_id' not in session:
         return jsonify({'error': 'User not identified'}), 400
     user_id = session['user_id']
@@ -63,7 +66,7 @@ def upload_xyz():
         return jsonify({'error': 'XYZ content is required'}), 400
 
     try:
-        # Save the uploaded XYZ content to the user's temporary directory
+        # Save uploaded XYZ content to user's isolated temporary workspace
         user_tmp_dir = os.path.join('static', 'tmp', user_id)
         os.makedirs(user_tmp_dir, exist_ok=True)
 
@@ -75,9 +78,10 @@ def upload_xyz():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Route to generate a cluster based on user configuration
+# API endpoint to generate random molecular clusters based on user-defined atomic composition
 @app.route('/generate_cluster', methods=['POST'])
 def generate_cluster():
+    # Ensure user is properly identified before cluster generation
     if 'user_id' not in session:
         return jsonify({'error': 'User not identified'}), 400
     user_id = session['user_id']
@@ -89,15 +93,16 @@ def generate_cluster():
         return jsonify({'error': 'Cluster configuration is required'}), 400
 
     try:
-        # Parse atom sequence and generate random coordinates
+        # Parse atomic sequence and generate randomized 3D coordinates for cluster
         atoms = parse_atom_sequence(cluster_config)
         coords = generate_random_coordinates(len(atoms))
 
-        # Create XYZ content and save it to the user's temporary directory
+        # Build XYZ file format with atom count header and atomic coordinates
         xyz_content = f"{len(atoms)}\n\n"
         for atom, coord in zip(atoms, coords):
             xyz_content += f"{atom} {coord[0]:.4f} {coord[1]:.4f} {coord[2]:.4f}\n"
 
+        # Save generated cluster to user's temporary workspace
         user_tmp_dir = os.path.join('static', 'tmp', user_id)
         os.makedirs(user_tmp_dir, exist_ok=True)
 
@@ -109,22 +114,23 @@ def generate_cluster():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Route to optimize the structure of the uploaded XYZ content
+# API endpoint to perform molecular structure optimization using specified algorithms
 @app.route('/optimize', methods=['POST'])
 def optimize():
+    # Validate user session before starting optimization process
     if 'user_id' not in session:
         return jsonify({'error': 'User not identified'}), 400
     user_id = session['user_id']
 
     data = request.json
     xyz_content = data.get('xyz_content')
-    method = data.get('method', 'L-BFGS-B')
+    method = data.get('method', 'L-BFGS-B')  # Default optimization method
 
     if not xyz_content:
         return jsonify({'error': 'XYZ content is required'}), 400
 
     try:
-        # Perform optimization and save the optimized structure
+        # Setup user workspace and prepare input file for optimization
         user_tmp_dir = os.path.join('static', 'tmp', user_id)
         os.makedirs(user_tmp_dir, exist_ok=True)
 
@@ -133,53 +139,57 @@ def optimize():
         if not os.path.exists(temp_file_path):
             return jsonify({'error': f"File not found: {temp_file_path}"}), 400
 
-        # Guardar el contenido XYZ actual para asegurar que estamos optimizando
-        # el modelo correcto en cada reoptimización
+        # Update input file with current XYZ content to ensure optimization
+        # uses the most recent molecular structure for re-optimization scenarios
         with open(temp_file_path, 'w') as f:
             f.write(xyz_content)
 
-        # Ahora realiza la optimización con el archivo actualizado
+        # Execute structure optimization and capture energy changes with timing metrics
         (energy_values, execution_time) = optimize_structure(temp_file_path, method=method)
         old_energy, new_energy = energy_values
 
+        # Move optimized structure file to user's workspace for retrieval
         optimized_file_source = os.path.join('opt-input.xyz')
         optimized_file_destination = os.path.join(user_tmp_dir, 'opt-input.xyz')
         os.rename(optimized_file_source, optimized_file_destination)
 
+        # Read optimized structure content for client response
         with open(optimized_file_destination, 'r') as optimized_file:
             optimized_xyz_content = optimized_file.read()
 
+        # Format success message with optimization results and performance metrics
         success_message = f"✅ Optimization executed {execution_time:.4f} sec.<br>⚡️ Old energy: {old_energy:.4f} eV<br>⚡️ New energy: {new_energy:.4f} eV"
         return jsonify({'optimized_xyz_content': optimized_xyz_content, 'message': success_message})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Function to delete all temporary files in the 'static/tmp' directory
+# Background maintenance function to clean up all temporary user files and directories
 def delete_all_temp_files():
     tmp_dir = os.path.join(app.root_path, 'static', 'tmp')
     if (os.path.exists(tmp_dir)):
         try:
+            # Recursively remove all user directories and files in temporary storage
             for item in os.listdir(tmp_dir):
                 item_path = os.path.join(tmp_dir, item)
                 if os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
+                    shutil.rmtree(item_path)  # Remove user directories
                 else:
-                    os.remove(item_path)
+                    os.remove(item_path)  # Remove standalone files
             print(f"[{datetime.now()}] All temporary files deleted successfully.")
         except Exception as e:
             print(f"[{datetime.now()}] Error deleting temporary files: {str(e)}")
     else:
         print(f"[{datetime.now()}] Temporary directory does not exist.")
 
-# Configure the scheduler to run the cleanup task every Sunday at 12:00 AM
+# Configure automated cleanup scheduler to run weekly maintenance on Sundays at midnight
 scheduler = BackgroundScheduler()
 scheduler.add_job(delete_all_temp_files, 'cron', day_of_week='sun', hour=0, minute=0)
 scheduler.start()
 
-# Ensure the scheduler shuts down when the application exits
+# Register cleanup handler to ensure scheduler shuts down gracefully on application exit
 import atexit
 atexit.register(lambda: scheduler.shutdown())
 
-# Run the Flask application
+# Application entry point - start Flask development server with debug mode enabled
 if __name__ == '__main__':
     app.run(debug=True)
