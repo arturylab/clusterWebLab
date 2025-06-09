@@ -146,7 +146,7 @@ The Gupta potential is a many-body potential designed specifically for metallic 
 
 **Cohesive Energy Term:**
 
-$$E_{mb}^i = \[\sum_{j \neq i} \xi_{(a,b)}^2 \exp\left\{-2q_{(a,b)}\left(\frac{r_{ij}}{r_{(a,b)}^0} - 1\right)\right\}\right]^{1/2}$$
+$$E_{mb}^i = \left[ \sum_{j \neq i} \xi_{(a,b)}^2 \exp\left\{-2q_{(a,b)}\left(\frac{r_{ij}}{r_{(a,b)}^0} - 1\right)\right\} \right]^{1/2}}$$
 
 **Repulsive Energy Term (Born-Mayer type):**
 
