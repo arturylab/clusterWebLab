@@ -8,7 +8,7 @@ ClusterWebLab is a comprehensive web application designed for visualizing, gener
 
 ## 🌐 Live Demo
 
-Experience the platform live at: **[https://clusterweblab.appx.ro/](https://clusterweblab.appx.ro/)**
+Experience the platform live at: **[https://clusterweblab.arturylab.dev/](https://clusterweblab.arturylab.dev/)**
 
 ---
 
